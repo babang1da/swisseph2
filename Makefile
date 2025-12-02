@@ -32,17 +32,35 @@
 OS := $(shell uname)
 
 ifeq ($(OS), Darwin)
-  # macOS settings
-  CC               = cc
-  CFLAGS           = -g -Wall -fPIC
+  CC               = clang
+  # Оптимизация для ARM M1 (Clang)
+  CFLAGS = -O3 \
+           -march=armv8-a+simd \
+           -ffast-math \
+           -funroll-loops \
+           -flto \
+           -fstrict-overflow \
+           -fomit-frame-pointer \
+           -fPIC \
+           -fno-common
+  # fprefetch-loop-arrays не поддерживается Clang, убрано
   LIBS             = -lm
   DYLIB_FLAG       = -dynamiclib
   DYLIB_EXT        = dylib
   STATIC_SUPPORTED = false
 else
-  # Assume Linux settings
-  CC               = cc
-  CFLAGS           = -g -Wall -fPIC
+  CC               = gcc
+  # Оптимизация для Linux/Alpine (x86_64, ARM)
+  CFLAGS = -O3 \
+           -march=native \
+           -ffast-math \
+           -funroll-loops \
+           -flto \
+           -fprefetch-loop-arrays \
+           -fstrict-overflow \
+           -fomit-frame-pointer \
+           -fPIC \
+           -fno-common
   LIBS             = -lm -ldl
   DYLIB_FLAG       = -shared
   DYLIB_EXT        = so
@@ -50,6 +68,7 @@ else
   STATIC_LINK_FLAGS= -Wl,-Bstatic
   DYNAMIC_LINK_FLAGS= -Wl,-Bdynamic
 endif
+
 
 # Object files for the Swiss Ephemeris library
 SWEOBJ = swedate.o swehouse.o swejpl.o swemmoon.o swemplan.o sweph.o \
